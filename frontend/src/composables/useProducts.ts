@@ -1,46 +1,46 @@
 // src/composables/useProducts.ts
 import { ref, onMounted } from "vue";
-import { apiGet } from "../services/api";
+import { useApi } from "@/composables/useApi";
 
 export interface Product {
   id: string;
   name: string;
   description: string;
   price: number;
-  imageUrl?: string;
   stock: number;
+  imageUrl?: string | null;
   categoryId?: string | null;
 }
 
 const products = ref<Product[]>([]);
-const loading = ref(false);
-const error = ref<string | null>(null);
 
 export function useProducts() {
-  const loadProducts = async () => {
-    loading.value = true;
-    error.value = null;
+  // usamos el composable genérico
+  const {
+    data,
+    loading,
+    error,
+    request,
+    cancel: cancelarPeticion,
+  } = useApi<Product[]>()
 
-    try {
-      // GET http://localhost:3000/api/products
-      products.value = await apiGet<Product[]>("/products");
-    } catch (err: any) {
-      console.error(err);
-      error.value = err?.message ?? "Error al cargar productos";
-    } finally {
-      loading.value = false;
+  async function cargarProductos() {
+    const res = await request('/products')
+    if (res) {
+      products.value = res
     }
-  };
+  }
 
-  // Cargar automaticamente cuando se use el composable
+  // Cargar automáticamente al montar
   onMounted(() => {
-    loadProducts();
-  });
+    cargarProductos()
+  })
 
   return {
     products,
     loading,
     error,
-    loadProducts,
-  };
+    cargarProductos,
+    cancelarPeticion,
+  }
 }

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useProducts } from '@/composables/useProducts'
+import { useProducts, type Product } from '@/composables/useProducts'
 import { useCategories } from '@/composables/useCategories'
+import { useCart } from '@/composables/useCart'
+import ProductCard from '@/components/ProductCard.vue'
 
-// estado de filtros
 const busqueda = ref('')
 const categoriaSeleccionada = ref<'todas' | string>('todas')
 
-// composables que obtienen datos del API
 const {
   products,
   loading: cargandoProductos,
@@ -20,11 +20,16 @@ const {
   errorCategorias,
 } = useCategories()
 
-// estados combinados
-const cargando = computed(() => cargandoProductos.value || cargandoCategorias.value)
-const mensajeError = computed(() => errorProductos.value || errorCategorias.value)
+const { addToCart } = useCart()
 
-// 🟦 🧠 AQUÍ va tu propiedad computada
+const cargando = computed(
+  () => cargandoProductos.value || cargandoCategorias.value,
+)
+
+const mensajeError = computed(
+  () => errorProductos.value || errorCategorias.value,
+)
+
 const productosVisibles = computed(() => {
   const texto = busqueda.value.trim().toLowerCase()
 
@@ -42,15 +47,16 @@ const productosVisibles = computed(() => {
     return coincideBusqueda && coincideCategoria
   })
 })
-// 🟦 FIN de la computada
-</script>
 
+function manejarProductoAñadido(producto: Product) {
+  addToCart(producto)
+}
+</script>
 
 <template>
   <section>
     <h1>Catálogo de Productos</h1>
 
-    <!-- Filtros -->
     <div class="filtros">
       <input
         v-model="busqueda"
@@ -60,7 +66,6 @@ const productosVisibles = computed(() => {
 
       <select v-model="categoriaSeleccionada">
         <option value="todas">Todas las categorías</option>
-
         <option
           v-for="categoria in categorias"
           :key="categoria.id"
@@ -71,30 +76,27 @@ const productosVisibles = computed(() => {
       </select>
     </div>
 
-    <!-- Estados de carga / error -->
     <p v-if="cargando">Cargando productos...</p>
     <p v-else-if="mensajeError" class="error">
       {{ mensajeError }}
     </p>
 
-    <!-- Lista filtrada -->
-    <ul v-else>
-      <li v-if="productosVisibles.length === 0">
+    <div v-else class="grid-productos">
+      <p v-if="productosVisibles.length === 0">
         No se encontraron productos.
-      </li>
+      </p>
 
-      <li v-for="producto in productosVisibles" :key="producto.id">
-        {{ producto.name }} - $ {{ producto.price.toFixed(2) }}
-      </li>
-    </ul>
+      <ProductCard
+        v-for="producto in productosVisibles"
+        :key="producto.id"
+        :product="producto"
+        @added-to-cart="manejarProductoAñadido"
+      />
+    </div>
   </section>
 </template>
 
 <style scoped>
-h1 {
-  margin-bottom: 1rem;
-}
-
 .filtros {
   display: flex;
   flex-wrap: wrap;
@@ -110,6 +112,12 @@ h1 {
 
 .filtros select {
   padding: 0.5rem;
+}
+
+.grid-productos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
 }
 
 .error {
