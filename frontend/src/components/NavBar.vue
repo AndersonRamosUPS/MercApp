@@ -4,10 +4,12 @@
 
     <nav class="navbar__links">
       <RouterLink to="/">Inicio</RouterLink>
-      <RouterLink to="/carrito">Carrito</RouterLink>
+      <RouterLink to="/cart">Carrito</RouterLink>
+      <RouterLink to="/about">Acerca de</RouterLink>
     </nav>
   </header>
 </template>
+
 
 <script setup lang="ts">
 </script>
