@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useProducts, type Product } from '@/composables/useProducts'
 import { useCategories } from '@/composables/useCategories'
 import { useCart } from '@/composables/useCart'
 import ProductCard from '@/components/ProductCard.vue'
+
+const router = useRouter()
 
 const busqueda = ref('')
 const categoriaSeleccionada = ref<'todas' | string>('todas')
@@ -51,6 +54,10 @@ const productosVisibles = computed(() => {
 function manejarProductoAñadido(producto: Product) {
   addToCart(producto)
 }
+
+function irANuevoProducto() {
+  router.push({ name: 'product-new' })
+}
 </script>
 
 <template>
@@ -58,22 +65,32 @@ function manejarProductoAñadido(producto: Product) {
     <h1>Catálogo de Productos</h1>
 
     <div class="filtros">
-      <input
-        v-model="busqueda"
-        type="text"
-        placeholder="Buscar por nombre o descripción..."
-      />
+      <div class="filtros__busqueda">
+        <input
+          v-model="busqueda"
+          type="text"
+          placeholder="Buscar por nombre o descripción..."
+        />
 
-      <select v-model="categoriaSeleccionada">
-        <option value="todas">Todas las categorías</option>
-        <option
-          v-for="categoria in categorias"
-          :key="categoria.id"
-          :value="categoria.id"
-        >
-          {{ categoria.nombre }}
-        </option>
-      </select>
+        <select v-model="categoriaSeleccionada">
+          <option value="todas">Todas las categorías</option>
+          <option
+            v-for="categoria in categorias"
+            :key="categoria.id"
+            :value="categoria.id"
+          >
+            {{ categoria.nombre }}
+          </option>
+        </select>
+      </div>
+
+      <button
+        type="button"
+        class="btn-nuevo-producto"
+        @click="irANuevoProducto"
+      >
+        + Nuevo producto
+      </button>
     </div>
 
     <p v-if="cargando">Cargando productos...</p>
@@ -99,25 +116,47 @@ function manejarProductoAñadido(producto: Product) {
 <style scoped>
 .filtros {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
 }
 
-.filtros input {
+.filtros__busqueda {
+  display: flex;
   flex: 1;
-  min-width: 180px;
+  gap: 0.75rem;
+  min-width: 260px;
+}
+
+.filtros__busqueda input {
+  flex: 1;
   padding: 0.5rem;
 }
 
-.filtros select {
+.filtros__busqueda select {
   padding: 0.5rem;
+  min-width: 180px;
+}
+
+.btn-nuevo-producto {
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #4caf50;
+  color: #fff;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .grid-productos {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  column-gap: 1rem;  /* espacio horizontal */
+  row-gap: 2rem;     /* espacio vertical más grande */
+  align-items: stretch;
 }
 
 .error {
